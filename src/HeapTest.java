@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -45,7 +44,7 @@ public class HeapTest {
             Integer[] intArr = input.toArray(Integer[]::new);
             Heap<Integer> testHeap = new Heap<>(intArr);
             Integer firstMin = testHeap.extractMin();
-            for (int j = 0; j < input.size(); j++) {
+            for (int j = 0; j < input.size() - 1; j++) {
                 Assert.assertTrue(firstMin <= testHeap.findMin());
                 firstMin = testHeap.extractMin();
                 Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
@@ -70,6 +69,26 @@ public class HeapTest {
                 Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
             }
         }
+    }
+
+    /**
+     * Tests the creation of a new heap without an existing array.
+     */
+    @Test
+    public void testHeapCreation() {
+        Heap<Integer> testHeap = new Heap<>(Integer.class);
+        Random gen = new Random();
+        for (int i = 0; i < 100; i++) {
+            testHeap.insert(gen.nextInt());
+            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+        }
+        Integer firstMin = testHeap.extractMin();
+        for (int j = 0; j < 99; j++) {
+            Assert.assertTrue(firstMin <= testHeap.findMin());
+            firstMin = testHeap.extractMin();
+            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+        }
+
     }
 
     /**

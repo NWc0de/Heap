@@ -3,6 +3,7 @@
  * Author: Spencer Little
  */
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 /**
@@ -23,8 +24,9 @@ public class Heap<T extends Comparable> {
      * Initializes the heapArray when no initialize array is passed.
      */
     @SuppressWarnings("unchecked")
-    public Heap() {
-        heapArray = (T[]) new Object[10]; // issues may arise if returning this array (core java pg. 450)
+    public Heap(Class<T> t) {
+        // generic array creation: https://stackoverflow.com/questions/529085/how-to-create-a-generic-array-in-java
+        heapArray = (T[]) Array.newInstance(t, 10);
         capacity = 10;
         nextNodeIndex = 0;
     }
@@ -58,8 +60,7 @@ public class Heap<T extends Comparable> {
             heapArray = Arrays.copyOf(heapArray, capacity);
         }
         heapArray[nextNodeIndex] = toInsert;
-        swapUpTree(heapArray, nextNodeIndex);
-        nextNodeIndex++;
+        swapUpTree(heapArray, nextNodeIndex++);
     }
 
     /**
@@ -68,9 +69,11 @@ public class Heap<T extends Comparable> {
      * @return the minimum value
      */
     public T extractMin() {
+        if (nextNodeIndex < 0) throw new IllegalStateException("Cannot extract from empty heap.");
         T min = heapArray[0];
-        heapArray[0] = heapArray[nextNodeIndex -1];
-        swapDownTree(heapArray, 0);
+        heapArray[0] = heapArray[nextNodeIndex - 1];
+        heapArray[--nextNodeIndex] = null; // erase last element
+        swapDownTree(heapArray, 0, nextNodeIndex);
         return min;
     }
 
@@ -80,6 +83,7 @@ public class Heap<T extends Comparable> {
      * @return the minimum value in the heap
      */
     public T findMin() {
+        if (heapArray[0] == null) throw new IllegalStateException("Minimum does not exist: all elements have been extracted");
         return heapArray[0];
     }
 
@@ -92,7 +96,7 @@ public class Heap<T extends Comparable> {
     private T[] heapify(T[] toHeapify) {
         int start = (int) Math.floor(toHeapify.length/2) - 1; // the parent of the last node
         for (int i = start; i >= 0; i--) {
-            swapDownTree(toHeapify, i);
+            swapDownTree(toHeapify, i, toHeapify.length);
         }
         return toHeapify;
     }
@@ -106,16 +110,16 @@ public class Heap<T extends Comparable> {
      * @param parentNode the node current being processed
      */
     @SuppressWarnings("unchecked")
-    private void swapDownTree(T[] toHeapify, int parentNode) {
+    private void swapDownTree(T[] toHeapify, int parentNode, int elementCount) {
         int swappedChild = Integer.MAX_VALUE;
-        if (2*parentNode + 1 >= toHeapify.length) return; // parent node is leaf
-        if (2*parentNode + 2 >= toHeapify.length && // parent node has one child
+        if (2*parentNode + 1 >= elementCount) return; // parent node is leaf
+        if (2*parentNode + 2 >= elementCount && // parent node has one child
                 toHeapify[parentNode].compareTo(toHeapify[2*parentNode + 1]) > 0) {
 
             swappedChild = 2*parentNode + 1;
             swapArrayElements(toHeapify, 2*parentNode + 1, parentNode);
 
-        } else if (2*parentNode + 2 >= toHeapify.length) {
+        } else if (2*parentNode + 2 >= elementCount) {
 
             return; // one child no swap
 
@@ -143,7 +147,7 @@ public class Heap<T extends Comparable> {
             swapArrayElements(toHeapify, 2*parentNode + 2, parentNode);
 
         }
-        swapDownTree(toHeapify, swappedChild);
+        swapDownTree(toHeapify, swappedChild, elementCount);
     }
 
     /**
