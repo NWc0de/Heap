@@ -5,6 +5,7 @@
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * An implementation of the heap data structure. Complexity:
@@ -19,6 +20,7 @@ public class Heap<T extends Comparable> {
     public int nextNodeIndex;
     private T[] heapArray;
     private int capacity;
+    private HashMap<T, Integer> objectIndices = new HashMap<>();
 
     /**
      * Initializes the heapArray when no initialize array is passed.
@@ -37,6 +39,10 @@ public class Heap<T extends Comparable> {
      * @param userArray the user provided array to be heapified
      */
     public Heap(T[] userArray) {
+        int ind = 0;
+        for (T t : userArray) {
+            objectIndices.put(t, ind++);
+        }
         heapArray = heapify(userArray);
         capacity = heapArray.length;
         nextNodeIndex = heapArray.length;
@@ -60,6 +66,7 @@ public class Heap<T extends Comparable> {
             heapArray = Arrays.copyOf(heapArray, capacity);
         }
         heapArray[nextNodeIndex] = toInsert;
+        objectIndices.put(toInsert, nextNodeIndex); // save index of the object
         swapUpTree(heapArray, nextNodeIndex++);
     }
 
@@ -75,6 +82,40 @@ public class Heap<T extends Comparable> {
         heapArray[--nextNodeIndex] = null; // erase last element
         swapDownTree(heapArray, 0, nextNodeIndex);
         return min;
+    }
+
+    /**
+     * Deletes an arbitrary element from the heap. O(log(n)) because a HashMap of
+     * object indicies is maintained.
+     * @complexity O(log(n))
+     * @param toDelete the object to delete from the heap
+     */
+    @SuppressWarnings("unchecked")
+    public void delete(T toDelete) {
+        if (!objectIndices.containsKey(toDelete)) {
+            throw new IllegalArgumentException("Heap does not contain the specified element");
+        }
+
+        int pos = objectIndices.remove(toDelete);
+        objectIndices.put(heapArray[nextNodeIndex-1], pos);
+        heapArray[pos] = heapArray[nextNodeIndex-1];
+        heapArray[--nextNodeIndex] = null;
+
+        int parentNode = (int) Math.floor((pos+1)/2) - 1 >= 0 ? (int) Math.floor((pos+1)/2) - 1 : -1;
+        int childNode = 2*pos + 1 < nextNodeIndex ? 2*pos + 1 : -1;
+        int childNodeTwo = 2*pos + 2 < nextNodeIndex ? 2*pos + 2 : -1;
+
+
+        if (childNode != -1 && childNodeTwo != -1 && ( // node has two children and is greater than one of them
+                heapArray[pos].compareTo(heapArray[childNode]) > 0 ||
+                        heapArray[pos].compareTo(heapArray[childNodeTwo]) > 0)) {
+            swapDownTree(heapArray, pos, nextNodeIndex);
+        } else if (childNode != -1 && heapArray[pos].compareTo(heapArray[childNode]) > 0) { // one child, greater than that child
+            swapDownTree(heapArray, pos, nextNodeIndex);
+        } else if (parentNode != -1 && pos != nextNodeIndex) { // node isn't root, and deleted element wasn't last element in heap
+            if (heapArray[parentNode].compareTo(heapArray[pos]) > 0) swapUpTree(heapArray, pos);
+        }
+
     }
 
     /**
@@ -170,9 +211,12 @@ public class Heap<T extends Comparable> {
      * @param pos2 the position of the second element to be swapped
      */
     private void swapArrayElements(T[] arr, int pos, int pos2) {
+        objectIndices.put(arr[pos], pos2);
+        objectIndices.put(arr[pos2], pos);
         T temp = arr[pos];
         arr[pos] = arr[pos2];
         arr[pos2] = temp;
+
     }
 
 }

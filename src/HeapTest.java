@@ -7,9 +7,7 @@
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * @Author Spencer Little
@@ -72,6 +70,29 @@ public class HeapTest {
     }
 
     /**
+     * Tests the delete operation.
+     * NOTE: While testing with Integer objects, having duplicate values in the heap may cause
+     * issues with the Heap's internal index tracking HashMap as the Map will see two different
+     * Integer instance that have the same value as the same object.
+     */
+    @Test
+    public void testDelete() {
+        ArrayList<Integer> input;
+        for (int i = 0; i < 100; i++) {
+            input = new ArrayList<>();
+            makeRandomIntegerArrayUnique(input);
+            Integer[] intArr = input.toArray(Integer[]::new);
+
+            Heap<Integer> testHeap = new Heap<>(intArr.clone());
+
+            for (int j = 0; j < intArr.length; j++) {
+                testHeap.delete(intArr[j]);
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+            }
+        }
+    }
+
+    /**
      * Tests the creation of a new heap without an existing array.
      */
     @Test
@@ -115,6 +136,18 @@ public class HeapTest {
      * @param input the array to fill
      */
     private void makeRandomIntegerArray(List<Integer> input) {
+        Random gen = new Random();
+        int toFill = gen.nextInt(10000);
+        for (int i = 0; i <= toFill; i++) {
+            input.add(gen.nextInt());
+        }
+    }
+
+    /**
+     * Fills an ArrayList with a random amount of random integer values.
+     * @param input the array to fill
+     */
+    private void makeRandomIntegerArrayUnique(List<Integer> input) {
         Random gen = new Random();
         int toFill = gen.nextInt(10000);
         for (int i = 0; i <= toFill; i++) {
