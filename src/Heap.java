@@ -78,6 +78,7 @@ public class Heap<T extends Comparable> {
     public T extractMin() {
         if (nextNodeIndex < 0) throw new IllegalStateException("Cannot extract from empty heap.");
         T min = heapArray[0];
+        objectIndices.remove(min);
         heapArray[0] = heapArray[nextNodeIndex - 1];
         heapArray[--nextNodeIndex] = null; // erase last element
         swapDownTree(heapArray, 0, nextNodeIndex);
