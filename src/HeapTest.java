@@ -80,9 +80,8 @@ public class HeapTest {
         ArrayList<Integer> input;
         for (int i = 0; i < 100; i++) {
             input = new ArrayList<>();
-            makeRandomIntegerArrayUnique(input);
+            makeRandomIntegerArrayUnique(input); // duplicate keys can cause complications
             Integer[] intArr = input.toArray(Integer[]::new);
-
             Heap<Integer> testHeap = new Heap<>(intArr.clone());
 
             for (int j = 0; j < intArr.length; j++) {
@@ -151,7 +150,9 @@ public class HeapTest {
         Random gen = new Random();
         int toFill = gen.nextInt(10000);
         for (int i = 0; i <= toFill; i++) {
-            input.add(gen.nextInt());
+            int x = gen.nextInt();
+            while(input.contains(x)) x = gen.nextInt();
+            input.add(x);
         }
     }
 

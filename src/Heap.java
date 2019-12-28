@@ -65,6 +65,10 @@ public class Heap<T extends Comparable> {
             capacity = capacity + (capacity>>>1); // increase capacity by 1.5
             heapArray = Arrays.copyOf(heapArray, capacity);
         }
+        if (objectIndices.containsKey(toInsert)) {
+            System.out.println("Warning: Avoid adding elements with duplicate keys, this " +
+                    "will cause unexpected behavior during deletion.");
+        }
         heapArray[nextNodeIndex] = toInsert;
         objectIndices.put(toInsert, nextNodeIndex); // save index of the object
         swapUpTree(heapArray, nextNodeIndex++);
@@ -98,23 +102,22 @@ public class Heap<T extends Comparable> {
         }
 
         int pos = objectIndices.remove(toDelete);
-        objectIndices.put(heapArray[nextNodeIndex-1], pos);
-        heapArray[pos] = heapArray[nextNodeIndex-1];
-        heapArray[--nextNodeIndex] = null;
+        objectIndices.put(heapArray[--nextNodeIndex], pos);
+        heapArray[pos] = heapArray[nextNodeIndex];
+        heapArray[nextNodeIndex] = null;
 
-        int parentNode = (int) Math.floor((pos+1)/2) - 1 >= 0 ? (int) Math.floor((pos+1)/2) - 1 : -1;
-        int childNode = 2*pos + 1 < nextNodeIndex ? 2*pos + 1 : -1;
-        int childNodeTwo = 2*pos + 2 < nextNodeIndex ? 2*pos + 2 : -1;
+        int parentNode = (pos+1)/2 - 1;
+        int childNode = 2*pos + 1;
 
+        if (childNode + 1 < nextNodeIndex && !lessThan(heapArray[childNode], heapArray[childNode + 1])) {
+            childNode++;
+        }
 
-        if (childNode != -1 && childNodeTwo != -1 && ( // node has two children and is greater than one of them
-                heapArray[pos].compareTo(heapArray[childNode]) > 0 ||
-                        heapArray[pos].compareTo(heapArray[childNodeTwo]) > 0)) {
+        if (childNode < nextNodeIndex && !lessThan(heapArray[pos], heapArray[childNode])) {
             swapDownTree(heapArray, pos, nextNodeIndex);
-        } else if (childNode != -1 && heapArray[pos].compareTo(heapArray[childNode]) > 0) { // one child, greater than that child
-            swapDownTree(heapArray, pos, nextNodeIndex);
-        } else if (parentNode != -1 && pos != nextNodeIndex) { // node isn't root and deleted element wasn't last element in heap
-            if (heapArray[parentNode].compareTo(heapArray[pos]) > 0) swapUpTree(heapArray, pos);
+        } else if (parentNode != -1 && pos != nextNodeIndex && !lessThan(heapArray[parentNode], heapArray[pos])) {
+            // node isn't root, deleted element wasn't last element, parent is greater than new child
+            swapUpTree(heapArray, pos);
         }
 
     }
@@ -153,30 +156,22 @@ public class Heap<T extends Comparable> {
      */
     @SuppressWarnings("unchecked")
     private void swapDownTree(T[] toHeapify, int parentNode, int elementCount) {
-        int swappedChild;
-        if (2*parentNode + 1 >= elementCount) return; // parent node is leaf
-        if (2*parentNode + 2 >= elementCount && // parent node has one child
-                toHeapify[parentNode].compareTo(toHeapify[2*parentNode + 1]) > 0) {
+        int childNode = 2*parentNode + 1;
+        if (childNode >= elementCount) return; // parent node is leaf (first base case)
 
-            swappedChild = 2*parentNode + 1;
-            swapArrayElements(toHeapify, swappedChild, parentNode);
-
-        } else if (2*parentNode + 2 >= elementCount) {
-
-            return; // one child no swap
-
-        } else if (toHeapify[parentNode].compareTo(toHeapify[2*parentNode + 1]) < 0 &&
-                toHeapify[parentNode].compareTo(toHeapify[2*parentNode + 2]) < 0) {
-
-            return; // heap is satisfied
-
-        } else { // two leafs, heap violation
-
-            swappedChild = toHeapify[2*parentNode + 1].compareTo(toHeapify[2*parentNode + 2]) < 0 ? 2*parentNode + 1 : 2*parentNode  + 2;
-            swapArrayElements(toHeapify, swappedChild, parentNode);
-
+        // swap parent with the lesser of it's children
+        if (childNode + 1 < elementCount && !lessThan(toHeapify[childNode], toHeapify[childNode+1])) {
+            childNode++;
         }
-        swapDownTree(toHeapify, swappedChild, elementCount);
+
+        // if parent > child swap, if not return (second base case)
+        if (!lessThan(toHeapify[parentNode], toHeapify[childNode])) {
+            swapArrayElements(toHeapify, childNode, parentNode);
+        } else {
+            return;
+        }
+
+        swapDownTree(toHeapify, childNode, elementCount);
     }
 
     /**
@@ -187,9 +182,20 @@ public class Heap<T extends Comparable> {
      */
     private void swapUpTree(T[] theArray, int childNode) {
         int parentNode = ((childNode+1)/2) - 1;
-        if (parentNode < 0 || theArray[parentNode].compareTo(theArray[childNode]) < 0) return;
+        if (parentNode < 0 || lessThan(theArray[parentNode], theArray[childNode])) return;
         swapArrayElements(theArray, childNode, parentNode);
         swapUpTree(theArray, parentNode);
+    }
+
+    /**
+     * Compares two user generic objects by invoking compareTo
+     * @param objOne the first object
+     * @param objTwo the second object
+     * @return true if objOne < objTwo false otherwise
+     */
+    @SuppressWarnings("unchecked")
+    private boolean lessThan(T objOne, T objTwo) {
+        return objOne.compareTo(objTwo) < 0;
     }
 
     /**
