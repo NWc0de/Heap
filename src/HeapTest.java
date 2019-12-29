@@ -26,7 +26,7 @@ public class HeapTest {
             makeRandomIntegerArray(input);
             Integer[] intArr = input.toArray(Integer[]::new);
             Heap<Integer> testHeap = new Heap<>(intArr);
-            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
         }
     }
 
@@ -45,7 +45,7 @@ public class HeapTest {
             for (int j = 0; j < input.size() - 1; j++) {
                 Assert.assertTrue(firstMin <= testHeap.findMin());
                 firstMin = testHeap.extractMin();
-                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
             }
         }
     }
@@ -64,7 +64,7 @@ public class HeapTest {
             Random gen = new Random();
             for (int j = 0; j < 100; j++) {
                 testHeap.insert(gen.nextInt());
-                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
             }
         }
     }
@@ -80,13 +80,58 @@ public class HeapTest {
         ArrayList<Integer> input;
         for (int i = 0; i < 100; i++) {
             input = new ArrayList<>();
-            makeRandomIntegerArrayUnique(input); // duplicate keys can cause complications
+            makeRandomIntegerArray(input);
             Integer[] intArr = input.toArray(Integer[]::new);
             Heap<Integer> testHeap = new Heap<>(intArr.clone());
 
             for (int j = 0; j < intArr.length; j++) {
                 testHeap.delete(intArr[j]);
-                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
+            }
+        }
+    }
+
+    @Test
+    public void testDeleteAll() {
+        ArrayList<Integer> input;
+        for (int i = 0; i < 100; i++) {
+            input = new ArrayList<>();
+            makeRandomIntegerArray(input);
+            Integer[] intArr = input.toArray(Integer[]::new);
+            Heap<Integer> testHeap = new Heap<>(intArr.clone());
+            Integer x = new Random().nextInt();
+
+            for (int j = 0; j < 100; j++) {
+                testHeap.insert(x);
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
+            }
+
+            testHeap.deleteAll(x);
+            Assert.assertFalse(testHeap.contains(x));
+            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
+        }
+    }
+
+    @Test
+    public void testDuplicateKeys() {
+        ArrayList<Integer> input;
+        for (int i = 0; i < 100; i++) {
+            input = new ArrayList<>();
+            makeRandomIntegerArray(input);
+            Integer[] intArr = input.toArray(Integer[]::new);
+            Heap<Integer> testHeap = new Heap<>(intArr.clone());
+
+            Integer x = new Random().nextInt();
+            for (int j = 0; j < 100; j++) {
+                testHeap.insert(x);
+                Assert.assertEquals(testHeap.elementCount(x), j + 1);
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
+            }
+
+            for (int j = 0; j < 100; j++) {
+                testHeap.delete(x);
+                Assert.assertEquals(testHeap.elementCount(x), 99-j);
+                Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
             }
         }
     }
@@ -100,13 +145,13 @@ public class HeapTest {
         Random gen = new Random();
         for (int i = 0; i < 100; i++) {
             testHeap.insert(gen.nextInt());
-            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
         }
         Integer firstMin = testHeap.extractMin();
         for (int j = 0; j < 99; j++) {
             Assert.assertTrue(firstMin <= testHeap.findMin());
             firstMin = testHeap.extractMin();
-            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.getElementCount()));
+            Assert.assertTrue(isHeapified(testHeap.getHeapArray(), testHeap.size()));
         }
 
     }
@@ -139,20 +184,6 @@ public class HeapTest {
         int toFill = gen.nextInt(10000);
         for (int i = 0; i <= toFill; i++) {
             input.add(gen.nextInt());
-        }
-    }
-
-    /**
-     * Fills an ArrayList with a random amount of random integer values.
-     * @param input the array to fill
-     */
-    private void makeRandomIntegerArrayUnique(List<Integer> input) {
-        Random gen = new Random();
-        int toFill = gen.nextInt(10000);
-        for (int i = 0; i <= toFill; i++) {
-            int x = gen.nextInt();
-            while(input.contains(x)) x = gen.nextInt();
-            input.add(x);
         }
     }
 

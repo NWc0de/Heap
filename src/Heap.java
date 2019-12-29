@@ -4,8 +4,10 @@
  */
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * An implementation of the heap data structure. Complexity:
@@ -20,7 +22,7 @@ public class Heap<T extends Comparable> {
     public int nextNodeIndex;
     private T[] heapArray;
     private int capacity;
-    private HashMap<T, Integer> objectIndices = new HashMap<>();
+    private HashMap<T, List<Integer>> objectIndices = new HashMap<>();
 
     /**
      * Initializes the heapArray when no initialize array is passed.
@@ -41,15 +43,39 @@ public class Heap<T extends Comparable> {
     public Heap(T[] userArray) {
         int ind = 0;
         for (T t : userArray) {
-            objectIndices.put(t, ind++);
+            if (objectIndices.containsKey(t)) {
+                objectIndices.get(t).add(ind++);
+            } else {
+                List<Integer> indexList = new ArrayList<>();
+                indexList.add(ind++);
+                objectIndices.put(t, indexList);
+            }
         }
+
         heapArray = heapify(userArray);
         capacity = heapArray.length;
         nextNodeIndex = heapArray.length;
     }
 
+    /** Returns the heap as an array. */
     public T[] getHeapArray() {return heapArray;}
-    public int getElementCount() {return nextNodeIndex;}
+    /** Returns the number of elements in the heap. */
+    public int size() {return nextNodeIndex;}
+    /** Returns true if the heap contains the specified element. O(1). */
+    public boolean contains(T elem) {return objectIndices.containsKey(elem);}
+
+    /**
+     * Returns the number of occurrences of elem in the heap.
+     * @param elem the element to search for
+     * @return the number of occurrences of elem in the heap
+     */
+    public int elementCount(T elem) {
+        if (objectIndices.containsKey(elem)) {
+            return objectIndices.get(elem).size();
+        } else {
+            return 0;
+        }
+    }
 
     /********************************************************************
      *                          Heap Operations                         *
@@ -65,12 +91,16 @@ public class Heap<T extends Comparable> {
             capacity = capacity + (capacity>>>1); // increase capacity by 1.5
             heapArray = Arrays.copyOf(heapArray, capacity);
         }
+
         if (objectIndices.containsKey(toInsert)) {
-            System.out.println("Warning: Avoid adding elements with duplicate keys, this " +
-                    "will cause unexpected behavior during deletion.");
+            objectIndices.get(toInsert).add(nextNodeIndex);
+        } else {
+            List<Integer> indexList = new ArrayList<>();
+            indexList.add(nextNodeIndex);
+            objectIndices.put(toInsert, indexList);
         }
+
         heapArray[nextNodeIndex] = toInsert;
-        objectIndices.put(toInsert, nextNodeIndex); // save index of the object
         swapUpTree(heapArray, nextNodeIndex++);
     }
 
@@ -82,16 +112,21 @@ public class Heap<T extends Comparable> {
     public T extractMin() {
         if (nextNodeIndex < 0) throw new IllegalStateException("Cannot extract from empty heap.");
         T min = heapArray[0];
-        objectIndices.remove(min);
-        heapArray[0] = heapArray[nextNodeIndex - 1];
-        heapArray[--nextNodeIndex] = null; // erase last element
+        if (objectIndices.get(min).size() > 1) {
+            objectIndices.get(min).remove(0);
+        } else {
+            objectIndices.remove(min);
+        }
+        heapArray[0] = heapArray[--nextNodeIndex];
+        heapArray[nextNodeIndex] = null;
         swapDownTree(heapArray, 0, nextNodeIndex);
         return min;
     }
 
     /**
      * Deletes an arbitrary element from the heap. O(log(n)) because a HashMap of
-     * object indicies is maintained.
+     * object indicies is maintained. If heap contains elements with duplicate keys
+     * then the elements are deleted in an arbitrary order.
      * @complexity O(log(n))
      * @param toDelete the object to delete from the heap
      */
@@ -101,8 +136,17 @@ public class Heap<T extends Comparable> {
             throw new IllegalArgumentException("Heap does not contain the specified element");
         }
 
-        int pos = objectIndices.remove(toDelete);
-        objectIndices.put(heapArray[--nextNodeIndex], pos);
+        int pos;
+        if (objectIndices.get(toDelete).size() > 1) {
+            pos = objectIndices.get(toDelete).remove(0);
+        } else {
+            pos = objectIndices.remove(toDelete).remove(0);
+        }
+
+        if (pos != --nextNodeIndex) { // if toDelete is not leaf or last element (root with no other elements)
+            objectIndices.get(heapArray[nextNodeIndex]).remove(Integer.valueOf(nextNodeIndex));
+            objectIndices.get(heapArray[nextNodeIndex]).add(pos);
+        }
         heapArray[pos] = heapArray[nextNodeIndex];
         heapArray[nextNodeIndex] = null;
 
@@ -119,7 +163,21 @@ public class Heap<T extends Comparable> {
             // node isn't root, deleted element wasn't last element, parent is greater than new child
             swapUpTree(heapArray, pos);
         }
+    }
 
+    /**
+     * Deletes all occurrences of the given element in the heap.
+     * @complexity O(log(n))
+     * @throws IllegalArgumentException if the heap does not contain the specified element
+     * @param toDelete the element to delete
+     */
+    public void deleteAll(T toDelete) {
+        if (!objectIndices.containsKey(toDelete)) {
+            throw new IllegalArgumentException("Heap does not contain the specified element");
+        }
+        while (objectIndices.get(toDelete) != null) {
+            delete(toDelete);
+        }
     }
 
     /**
@@ -201,16 +259,20 @@ public class Heap<T extends Comparable> {
     /**
      * Swaps two elements in the specified array.
      * @param arr the array to swap elements in
-     * @param pos the position of the first element to be swapped
+     * @param pos1 the position of the first element to be swapped
      * @param pos2 the position of the second element to be swapped
      */
-    private void swapArrayElements(T[] arr, int pos, int pos2) {
-        objectIndices.put(arr[pos], pos2);
-        objectIndices.put(arr[pos2], pos);
-        T temp = arr[pos];
-        arr[pos] = arr[pos2];
-        arr[pos2] = temp;
+    private void swapArrayElements(T[] arr, int pos1, int pos2) {
+        List indLst1 = objectIndices.get(arr[pos1]);
+        List indLst2 = objectIndices.get(arr[pos2]);
+        indLst1.remove(Integer.valueOf(pos1));
+        indLst1.add(pos2);
+        indLst2.remove(Integer.valueOf(pos2));
+        indLst2.add(pos1);
 
+        T temp = arr[pos1];
+        arr[pos1] = arr[pos2];
+        arr[pos2] = temp;
     }
 
 }
