@@ -14,10 +14,6 @@ import java.util.*;
  */
 public class HeapTest {
 
-
-    /**
-     * Tests the heapify operation on 100 randomly generated arrays.
-     */
     @Test
     public void testHeapify() {
         ArrayList<Integer> input;
@@ -30,9 +26,6 @@ public class HeapTest {
         }
     }
 
-    /**
-     * Tests the extractMin operation on 100 randomly generated arrays.
-     */
     @Test
     public void testExtractMin() {
         ArrayList<Integer> input;
@@ -50,9 +43,6 @@ public class HeapTest {
         }
     }
 
-    /**
-     * Tests the insert operation
-     */
     @Test
     public void testInsert() {
         ArrayList<Integer> input;
@@ -69,12 +59,6 @@ public class HeapTest {
         }
     }
 
-    /**
-     * Tests the delete operation.
-     * NOTE: While testing with Integer objects, having duplicate values in the heap may cause
-     * issues with the Heap's internal index tracking HashMap as the Map will see two different
-     * Integer instance that have the same value as the same object.
-     */
     @Test
     public void testDelete() {
         ArrayList<Integer> input;
@@ -135,10 +119,7 @@ public class HeapTest {
             }
         }
     }
-
-    /**
-     * Tests the creation of a new heap without an existing array.
-     */
+    
     @Test
     public void testHeapCreation() {
         Heap<Integer> testHeap = new Heap<>(Integer.class);
