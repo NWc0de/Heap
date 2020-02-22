@@ -15,11 +15,20 @@ import java.util.List;
  */
 public class Heap<T extends Comparable> {
 
+    /** An enum indicating the type of heap, min or max. */
     public enum Type {MIN, MAX}
+    /** The type of heap, determines how heapCmp behaves. */
     private Type heapType;
+    /** Holds the index of the next open position in the heap array. */
     private int nextNodeIndex;
+    /** The heap array itself. */
     private T[] heapArray;
+    /** The current capacity of the heap array. */
     private int capacity;
+    /**
+     * A dictionary mapping an object to a list of indices in the heap
+     * array that contain that object or an equivalent object.
+     */
     private HashMap<T, List<Integer>> objectIndices = new HashMap<>();
 
     /**
