@@ -17,7 +17,7 @@ import java.util.List;
  * findMin - O(1)
  * @Author Spencer Little
  */
-public class Heap<T extends Comparable> {
+public class MinHeap<T extends Comparable> {
 
     public int nextNodeIndex;
     private T[] heapArray;
@@ -28,7 +28,7 @@ public class Heap<T extends Comparable> {
      * Initializes the heapArray when no initialize array is passed.
      */
     @SuppressWarnings("unchecked")
-    public Heap(Class<T> t) {
+    public MinHeap(Class<T> t) {
         // generic array creation: https://stackoverflow.com/questions/529085/how-to-create-a-generic-array-in-java
         heapArray = (T[]) Array.newInstance(t, 10);
         capacity = 10;
@@ -40,7 +40,7 @@ public class Heap<T extends Comparable> {
      * Assumes array is full.
      * @param userArray the user provided array to be heapified
      */
-    public Heap(T[] userArray) {
+    public MinHeap(T[] userArray) {
         int ind = 0;
         for (T t : userArray) {
             if (objectIndices.containsKey(t)) {
@@ -86,7 +86,7 @@ public class Heap<T extends Comparable> {
      * @complexity O(log(n)), n = heapArray.length, can be O(n) if resizing is necessary
      * @param toInsert element to insert
      */
-    public void insert(T toInsert) {
+    public void insert(T toInsert) { //TODO: duplicate keys should be extracted in the order they were inserted 
         if (nextNodeIndex > capacity>>>1) {
             capacity = capacity + (capacity>>>1); // increase capacity by 1.5
             heapArray = Arrays.copyOf(heapArray, capacity);
