@@ -17,9 +17,11 @@ import java.util.List;
  * findMin - O(1)
  * @Author Spencer Little
  */
-public class MinHeap<T extends Comparable> {
+public class Heap<T extends Comparable> {
 
-    public int nextNodeIndex;
+    public enum Type {MIN, MAX}
+    private Type heapType;
+    private int nextNodeIndex;
     private T[] heapArray;
     private int capacity;
     private HashMap<T, List<Integer>> objectIndices = new HashMap<>();
@@ -28,11 +30,12 @@ public class MinHeap<T extends Comparable> {
      * Initializes the heapArray when no initialize array is passed.
      */
     @SuppressWarnings("unchecked")
-    public MinHeap(Class<T> t) {
+    public Heap(Class<T> t, Type type) {
         // generic array creation: https://stackoverflow.com/questions/529085/how-to-create-a-generic-array-in-java
         heapArray = (T[]) Array.newInstance(t, 10);
         capacity = 10;
         nextNodeIndex = 0;
+        heapType = type;
     }
 
     /**
@@ -40,7 +43,7 @@ public class MinHeap<T extends Comparable> {
      * Assumes array is full.
      * @param userArray the user provided array to be heapified
      */
-    public MinHeap(T[] userArray) {
+    public Heap(T[] userArray, Type type) {
         int ind = 0;
         for (T t : userArray) {
             if (objectIndices.containsKey(t)) {
@@ -52,6 +55,7 @@ public class MinHeap<T extends Comparable> {
             }
         }
 
+        heapType = type;
         heapArray = heapify(userArray);
         capacity = heapArray.length;
         nextNodeIndex = heapArray.length;
@@ -105,22 +109,22 @@ public class MinHeap<T extends Comparable> {
     }
 
     /**
-     * Extracts and returns the minimum value.
+     * Extracts and returns the next minimum/maximum value.
      * @complexity O(log(n))
      * @return the minimum value
      */
-    public T extractMin() {
+    public T extractRoot() {
         if (nextNodeIndex < 0) throw new IllegalStateException("Cannot extract from empty heap.");
-        T min = heapArray[0];
-        if (objectIndices.get(min).size() > 1) {
-            objectIndices.get(min).remove(0);
+        T root = heapArray[0];
+        if (objectIndices.get(root).size() > 1) {
+            objectIndices.get(root).remove(0);
         } else {
-            objectIndices.remove(min);
+            objectIndices.remove(root);
         }
         heapArray[0] = heapArray[--nextNodeIndex];
         heapArray[nextNodeIndex] = null;
         swapDownTree(heapArray, 0, nextNodeIndex);
-        return min;
+        return root;
     }
 
     /**
@@ -153,13 +157,13 @@ public class MinHeap<T extends Comparable> {
         int parentNode = (pos+1)/2 - 1;
         int childNode = 2*pos + 1;
 
-        if (childNode + 1 < nextNodeIndex && !lessThan(heapArray[childNode], heapArray[childNode + 1])) {
+        if (childNode + 1 < nextNodeIndex && !heapCmp(heapArray[childNode], heapArray[childNode + 1])) {
             childNode++;
         }
 
-        if (childNode < nextNodeIndex && !lessThan(heapArray[pos], heapArray[childNode])) {
+        if (childNode < nextNodeIndex && !heapCmp(heapArray[pos], heapArray[childNode])) {
             swapDownTree(heapArray, pos, nextNodeIndex);
-        } else if (parentNode != -1 && pos != nextNodeIndex && !lessThan(heapArray[parentNode], heapArray[pos])) {
+        } else if (parentNode != -1 && pos != nextNodeIndex && !heapCmp(heapArray[parentNode], heapArray[pos])) {
             // node isn't root, deleted element wasn't last element, parent is greater than new child
             swapUpTree(heapArray, pos);
         }
@@ -181,11 +185,11 @@ public class MinHeap<T extends Comparable> {
     }
 
     /**
-     * Returns but does not extract the minimum value in the heap.
+     * Returns but does not extract the next minimum/maximum value in the heap.
      * @complexity O(1)
      * @return the minimum value in the heap
      */
-    public T findMin() {
+    public T getRoot() {
         if (heapArray[0] == null) throw new IllegalStateException("Minimum does not exist: all elements have been extracted");
         return heapArray[0];
     }
@@ -218,12 +222,12 @@ public class MinHeap<T extends Comparable> {
         if (childNode >= elementCount) return; // parent node is leaf (first base case)
 
         // swap parent with the lesser of it's children
-        if (childNode + 1 < elementCount && !lessThan(toHeapify[childNode], toHeapify[childNode+1])) {
+        if (childNode + 1 < elementCount && !heapCmp(toHeapify[childNode], toHeapify[childNode+1])) {
             childNode++;
         }
 
         // if parent > child swap, if not return (second base case)
-        if (!lessThan(toHeapify[parentNode], toHeapify[childNode])) {
+        if (!heapCmp(toHeapify[parentNode], toHeapify[childNode])) {
             swapArrayElements(toHeapify, childNode, parentNode);
         } else {
             return;
@@ -240,20 +244,25 @@ public class MinHeap<T extends Comparable> {
      */
     private void swapUpTree(T[] theArray, int childNode) {
         int parentNode = ((childNode+1)/2) - 1;
-        if (parentNode < 0 || lessThan(theArray[parentNode], theArray[childNode])) return;
+        if (parentNode < 0 || heapCmp(theArray[parentNode], theArray[childNode])) return;
         swapArrayElements(theArray, childNode, parentNode);
         swapUpTree(theArray, parentNode);
     }
 
     /**
-     * Compares two user generic objects by invoking compareTo
+     * Compares two user generic objects by invoking compareTo, returns a boolean
+     * indicating whether objOne < objTwo or objOne > objTwo depending on whether
+     * this is a min or max heap.
      * @param objOne the first object
      * @param objTwo the second object
      * @return true if objOne < objTwo false otherwise
      */
     @SuppressWarnings("unchecked")
-    private boolean lessThan(T objOne, T objTwo) {
-        return objOne.compareTo(objTwo) < 0;
+    private boolean heapCmp(T objOne, T objTwo) {
+        boolean cmp;
+        if (heapType == Type.MIN) cmp = objOne.compareTo(objTwo) < 0;
+        else cmp = objOne.compareTo(objTwo) > 0;
+        return cmp;
     }
 
     /**
