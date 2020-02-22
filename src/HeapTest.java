@@ -10,7 +10,7 @@ import org.junit.Test;
 import java.util.*;
 
 /**
- * @Author Spencer Little
+ * @author Spencer Little
  */
 public class HeapTest {
 

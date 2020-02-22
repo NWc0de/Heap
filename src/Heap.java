@@ -10,12 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * An implementation of the heap data structure. Complexity:
- * heapify - O(n)
- * insert - O(log(n))
- * extractMin - O(log(n))
- * findMin - O(1)
- * @Author Spencer Little
+ * An implementation of a heap data structure.
+ * @author Spencer Little
  */
 public class Heap<T extends Comparable> {
 
@@ -87,7 +83,7 @@ public class Heap<T extends Comparable> {
 
     /**
      * Inserts an element into the heap.
-     * @complexity O(log(n)), n = heapArray.length, can be O(n) if resizing is necessary
+     * Complexity: O(log(n)), n = heapArray.length, can be O(n) if resizing is necessary
      * @param toInsert element to insert
      */
     public void insert(T toInsert) { //TODO: duplicate keys should be extracted in the order they were inserted 
@@ -110,11 +106,12 @@ public class Heap<T extends Comparable> {
 
     /**
      * Extracts and returns the next minimum/maximum value.
-     * @complexity O(log(n))
+     * Complexity: O(log(n))
+     * @throws IllegalStateException if the heap is empty
      * @return the minimum value
      */
     public T extractRoot() {
-        if (nextNodeIndex < 0) throw new IllegalStateException("Cannot extract from empty heap.");
+        if (nextNodeIndex < 0) throw new IllegalStateException("Root does not exist, heap is empty.");
         T root = heapArray[0];
         if (objectIndices.get(root).size() > 1) {
             objectIndices.get(root).remove(0);
@@ -131,7 +128,8 @@ public class Heap<T extends Comparable> {
      * Deletes an arbitrary element from the heap. O(log(n)) because a HashMap of
      * object indicies is maintained. If heap contains elements with duplicate keys
      * then the elements are deleted in an arbitrary order.
-     * @complexity O(log(n))
+     * Complexity: O(log(n))
+     * @throws IllegalArgumentException if the heap does not contain the specified element
      * @param toDelete the object to delete from the heap
      */
     @SuppressWarnings("unchecked")
@@ -171,7 +169,7 @@ public class Heap<T extends Comparable> {
 
     /**
      * Deletes all occurrences of the given element in the heap.
-     * @complexity O(log(n))
+     * Complexity: O(log(n))
      * @throws IllegalArgumentException if the heap does not contain the specified element
      * @param toDelete the element to delete
      */
@@ -186,17 +184,18 @@ public class Heap<T extends Comparable> {
 
     /**
      * Returns but does not extract the next minimum/maximum value in the heap.
-     * @complexity O(1)
+     * Complexity: O(1)
+     * @throws IllegalStateException if the heap is empty
      * @return the minimum value in the heap
      */
     public T getRoot() {
-        if (heapArray[0] == null) throw new IllegalStateException("Minimum does not exist: all elements have been extracted");
+        if (heapArray[0] == null) throw new IllegalStateException("Root does not exist, heap is empty.");
         return heapArray[0];
     }
 
     /**
      * Constructs a heap from an arbitrary array.
-     * @complexity O(n), n = toHeapify.length
+     * Complexity: O(n), n = toHeapify.length
      * @param toHeapify the array to heapify
      * @return the heapified array
      */
@@ -212,7 +211,7 @@ public class Heap<T extends Comparable> {
      * Compares the child nodes of T[parentNode] and swaps parentNode
      * with the least of the two, if parent node is greater than those
      * element, all the way to the leafs of the tree.
-     * @complexity O(log(n))
+     * Complexity: O(log(n))
      * @param toHeapify the array being heapified
      * @param parentNode the node current being processed
      */
